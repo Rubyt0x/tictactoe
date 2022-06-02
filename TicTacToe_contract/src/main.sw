@@ -32,6 +32,7 @@ u64 timeout = 300;
 abi TicTacToe {
     fn save_player_position(player: u64, position: u64);
     fn get_player_position_filled(position: u64) -> u64;
+    fn board_full() -> bool;
 }
 
 impl TicTacToe for Contract {
@@ -64,7 +65,7 @@ impl TicTacToe for Contract {
     }
 
 
-    fn horizontal_alignement()-> Players winner{        
+    fn horizontal_alignement() -> Players winner {        
         if (
             (get_player_position_filled(1) == get_player_position_filled(2) && get_player_position_filled(2)  == get_player_position_filled(3) && get_player_position_filled(1) != Players.None)  
         ) {
@@ -83,7 +84,7 @@ impl TicTacToe for Contract {
         return Players.None;
     }
     
-    fn vertical_alignement() {
+    fn vertical_alignement() -> Players winner {
         if (
             (get_player_position_filled(1) == get_player_position_filled(4) && get_player_position_filled(4)  == get_player_position_filled(7) && get_player_position_filled(1) != Players.None)  
         ) {
@@ -102,7 +103,7 @@ impl TicTacToe for Contract {
         return Players.None;
     }
     
-    fn diagonal_alignement() {
+    fn diagonal_alignement() -> Players winner {
         if (
             (get_player_position_filled(1) == get_player_position_filled(5) && get_player_position_filled(5)  == get_player_position_filled(9) && get_player_position_filled(1) != Players.None)  
         ) {
@@ -116,4 +117,12 @@ impl TicTacToe for Contract {
         return Player.None;
     }
 
+    fn board_full() -> bool{
+        for (uint8 x = 0; x < 9; x++) {
+            if (get_player_position_filled(x) == None) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
