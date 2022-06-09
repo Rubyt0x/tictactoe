@@ -1,7 +1,7 @@
 contract;
 
 use core::*;
-use std::storage::StorageMap;
+use std::*;
 use std::{
     address::Address,
     assert::assert,
@@ -10,6 +10,12 @@ use std::{
     result::*,
     revert::revert,
 };
+
+storage{
+    nbr_of_games: u256,
+}
+
+const TIMEOUT: u64 = 300;
 
 enum Players {
         None : (), 
@@ -32,31 +38,44 @@ struct Game{
     playerTurn: Player
 }
 
-u64 nbrOfGames = 0;
-u64 timeout = 300;
+
 
 abi TicTacToe {
-    fn new_game() -> u64 gameID;
-    fn save_player_position(player: u64, position: u64);
-    fn get_player_position_filled(gameID: u64, position: u64) -> u64;
-    fn calculate_winner(Players[u64;9] memory board) -> (Winners winner);
-    fn horizontal_alignement() -> Players winner;
-    fn vertical_alignement() -> Players winner;
-    fn diagonal_alignement() -> Players winner;
-    fn board_full() -> bool;
+    fn new_game() -> Game;
+    fn make_move(game: Game, position: u64)->(bool, string);
+    fn next_player(game: Game);
+    fn save_player_position(player: Player, position: u64);
+    fn get_player_position_filled(gameID: u256, position: u64) -> Player;
+    fn save_winner(gameID: u256, winner: Winners);
+    fn get_winner(gameID: u256) -> Winners;
+    fn calculate_winner(game: Game) -> Winners;
+    fn horizontal_alignement(gameID: u256) -> Winners;
+    fn vertical_alignement(gameID: u256) -> Winners;
+    fn diagonal_alignement(gameID: u256) -> Winners;
+    fn is_board_full(gameID: u256) -> bool;
 }
+
+
 
 impl TicTacToe for Contract {
 
-    fn new_game() -> u64{
-        Game game;
-        game.playerTurn:: Players.PlayerOne;
-        nrOfGames++;
-        return nrOfGames;
+    fn new_game() -> Game{
+        let gameID = storage.nbr_of_games;
+        let mut game = Game {
+            gameID: gameID,
+            PlayerOne: Players.PlayerOne,
+            PlayerTwo: None,
+            winner: None,
+            playerTurn: Players.PlayerOne,
+        };
+        storage.nbr_of_games = storage.nbr_of_games+1;
+        return game;
     }
 
-    fn make_move(u64 gameID, position)->(bool success, string reason){
-        if (gameID > nrOfGames) {
+
+    fn make_move(game: Game, position: u64)->(bool, string){
+        let gameID = game.gameID;
+        if (gameID > storage.nbr_of_games) {
             return (false, "No such game exists.");
         }
 
@@ -77,16 +96,14 @@ impl TicTacToe for Contract {
         }
 
         // Now the move is recorded and the according event emitted.
-        position = game.playerTurn;
-        emit PlayerMadeMove(_gameId, msg_sender, position);
+        save_player_position(game.playerTurn,position);
 
         // Check if there is a winner now that we have a new move.
-        Winners winner = calculateWinner(gameID);
+        let winner = calculateWinner(gameID);
         if (winner != Winners.None) {
             // If there is a winner (can be a `Draw`) it must be recorded in the game and
             // the corresponding event must be emitted.
             game.winner = winner;
-            log GameOver(gameID, winner);
 
             return (true, "The game is over.");
         }
@@ -98,6 +115,14 @@ impl TicTacToe for Contract {
         return (true, "");
     }
     
+    // nextPlayer changes whose turn it is for the given `_game`.
+    fn next_player(game: Game) {
+        if (game.playerTurn == Players.PlayerOne) {
+            game.playerTurn = Players.PlayerTwo;
+        } else {
+            game.playerTurn = Players.PlayerOne;
+        }
+    }
 
     // player 1 or 2, position is 1-9 (123/456/789)
     fn save_player_position(player: Player, position: u64) {
@@ -106,20 +131,22 @@ impl TicTacToe for Contract {
 
     // get the players position on the board, returns the player or empty
     // if the player returned value is None, that means it's empty
-    fn get_player_position_filled(gameID: u64, position: u64) -> player {
+    fn get_player_position_filled(gameID: u256, position: u64) -> Player {
         get(sha256(("player_pos", gameID, position)));
     }
 
-    fn save_winner(gameID: u64, winner: Winners){
+    fn save_winner(gameID: u256, winner: Winners){
         store(sha256(("winner", gameID)),winner);
     }
 
-    fn get_winner(gameID: u64) -> winner {
+    fn get_winner(gameID: u256) -> Winners {
         get(sha256(("winner", gameID, winner)));
     }
 
-    fn calculate_winner(gameID) -> (Winners winner){
-        Players player = winnerInRow();
+    fn calculate_winner(game: Game) -> Winners{
+        
+        let gameID = game.gameID;
+        Players player = horizontal_alignement(gameID);
         if (player == Players.PlayerOne) {
             save_winner(gameID, Winners.PlayerOne);
             return Winners.PlayerOne;
@@ -129,7 +156,7 @@ impl TicTacToe for Contract {
             return Winners.PlayerTwo;
         }
 
-        player = winnerInColumn();
+        player = vertical_alignement(gameID);
         if (player == Players.PlayerOne) {
             save_winner(gameID, Winners.PlayerOne);
             return Winners.PlayerOne;
@@ -139,7 +166,7 @@ impl TicTacToe for Contract {
             return Winners.PlayerTwo;
         }
 
-        player = winnerInDiagonal();
+        player = diagonal_alignement(gameID);
         if (player == Players.PlayerOne) {
             save_winner(gameID, Winners.PlayerOne);
             return Winners.PlayerOne;
@@ -151,17 +178,16 @@ impl TicTacToe for Contract {
 
         // If there is no winner and no more space on the board,
         // then it is a draw.
-        if (isBoardFull()) {
+        if (is_board_full(gameID)) {
             save_winner(gameID, Winners.Draw);
             return Winners.Draw;
         }
         save_winner(gameID, Winners.None);
         return Winners.None;
-
     }
 
 
-    fn horizontal_alignement(gameID) -> Players winner {        
+    fn horizontal_alignement(gameID: u256) -> Winners {   
         if (
             (get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 2) && get_player_position_filled(gameID, 2)  == get_player_position_filled(gameID, 3) && get_player_position_filled(gameID, 1) != Players.None)  
         ) {
@@ -180,7 +206,7 @@ impl TicTacToe for Contract {
         return Players.None;
     }
     
-    fn vertical_alignement(gameID) -> Players winner {
+    fn vertical_alignement(gameID: u256) -> Winners {
         if (
             (get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 4) && get_player_position_filled(gameID, 4)  == get_player_position_filled(gameID, 7) && get_player_position_filled(gameID, 1) != Players.None)  
         ) {
@@ -199,7 +225,7 @@ impl TicTacToe for Contract {
         return Players.None;
     }
     
-    fn diagonal_alignement(gameID) -> Players winner {
+    fn diagonal_alignement(gameID: u256) -> Winners {
         if (
             (get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(gameID, 9) && get_player_position_filled(gameID, 1) != Players.None)  
         ) {
@@ -213,7 +239,7 @@ impl TicTacToe for Contract {
         return Player.None;
     }
 
-    fn board_full(gameID) -> bool{
+    fn is_board_full(gameID: u256) -> bool{
         for (u8 x = 0; x < 9; x++) {
             if (get_player_position_filled(gameID, x) == None) {
                 return false;
