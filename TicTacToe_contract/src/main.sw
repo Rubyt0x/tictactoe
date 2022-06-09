@@ -146,7 +146,7 @@ impl TicTacToe for Contract {
     fn calculate_winner(game: Game) -> Winners{
         
         let gameID = game.gameID;
-        Players player = horizontal_alignement(gameID);
+        let player = horizontal_alignement(gameID);
         if (player == Players.PlayerOne) {
             save_winner(gameID, Winners.PlayerOne);
             return Winners.PlayerOne;
