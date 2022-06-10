@@ -32,8 +32,8 @@ enum Winners {
 
 struct Game{
     gameId: u64,
-    PlayerOne: address,
-    PlayerTwo: address,
+    PlayerOne: Players,
+    PlayerTwo: Players,
     winner: Winners,
     playerTurn: Player
 }
@@ -189,17 +189,17 @@ impl TicTacToe for Contract {
 
     fn horizontal_alignement(gameID: u256) -> Winners {   
         if (
-            (get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 2) && get_player_position_filled(gameID, 2)  == get_player_position_filled(gameID, 3) && get_player_position_filled(gameID, 1) != Players.None)  
+            get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 2) && get_player_position_filled(gameID, 2)  == get_player_position_filled(gameID, 3) && get_player_position_filled(gameID, 1) != Players.None  
         ) {
             return get_player_position_filled(gameID, 1);
         }
         elif (
-            (get_player_position_filled(gameID, 4) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(6) && get_player_position_filled(4) != Players.None)
+            get_player_position_filled(gameID, 4) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(6) && get_player_position_filled(4) != Players.None
         ) {
             return get_player_position_filled(gameID, 4);
         }
         elif (
-            (get_player_position_filled(gameID, 7) == get_player_position_filled(gameID, 8) && get_player_position_filled(gameID, 8)  == get_player_position_filled(gameID, 9) && get_player_position_filled(gameID, 7) != Players.None)
+            get_player_position_filled(gameID, 7) == get_player_position_filled(gameID, 8) && get_player_position_filled(gameID, 8)  == get_player_position_filled(gameID, 9) && get_player_position_filled(gameID, 7) != Players.None
         ) {
             return get_player_position_filled(gameID, 7);
         }
@@ -208,17 +208,17 @@ impl TicTacToe for Contract {
     
     fn vertical_alignement(gameID: u256) -> Winners {
         if (
-            (get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 4) && get_player_position_filled(gameID, 4)  == get_player_position_filled(gameID, 7) && get_player_position_filled(gameID, 1) != Players.None)  
+            get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 4) && get_player_position_filled(gameID, 4)  == get_player_position_filled(gameID, 7) && get_player_position_filled(gameID, 1) != Players.None  
         ) {
             return get_player_position_filled(gameID, 1);
         }
         elif (
-            (get_player_position_filled(gameID, 2) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(gameID, 8) && get_player_position_filled(gameID, 2) != Players.None)
+            get_player_position_filled(gameID, 2) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(gameID, 8) && get_player_position_filled(gameID, 2) != Players.None
         ) {
             return get_player_position_filled(gameID, 2);
         }
         elif (
-            (get_player_position_filled(gameID, 3) == get_player_position_filled(gameID, 6) && get_player_position_filled(gameID, 6)  == get_player_position_filled(gameID, 9) && get_player_position_filled(gameID, 3) != Players.None)
+            get_player_position_filled(gameID, 3) == get_player_position_filled(gameID, 6) && get_player_position_filled(gameID, 6)  == get_player_position_filled(gameID, 9) && get_player_position_filled(gameID, 3) != Players.None
         ) {
             return get_player_position_filled(gameID, 3);
         }
@@ -227,12 +227,12 @@ impl TicTacToe for Contract {
     
     fn diagonal_alignement(gameID: u256) -> Winners {
         if (
-            (get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(gameID, 9) && get_player_position_filled(gameID, 1) != Players.None)  
+            get_player_position_filled(gameID, 1) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(gameID, 9) && get_player_position_filled(gameID, 1) != Players.None  
         ) {
             return get_player_position_filled(gameID, 1);
         }
         elif (
-            (get_player_position_filled(gameID, 3) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(gameID, 7) && get_player_position_filled(gameID, 3) != Players.None)
+            get_player_position_filled(gameID, 3) == get_player_position_filled(gameID, 5) && get_player_position_filled(gameID, 5)  == get_player_position_filled(gameID, 7) && get_player_position_filled(gameID, 3) != Players.None
         ) {
             return get_player_position_filled(gameID, 2);
         }
